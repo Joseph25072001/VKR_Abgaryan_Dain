@@ -34,24 +34,25 @@ def apply_effect(nominator, relative_shift, denominator=None):
 #     l = np.random.lognormal(relative_shift,relative_shift,len(nominator))
     
     return n*np.where(nominator==0,1e-5,nominator)
+
 #2nd way: constant increase
     #return nominator * (relative_shift + 1)
     
 #3d way: injection of average values into zero metric values
-#     metric = np.array(sorted(metric))
-#     average = np.average(metric[metric>0])
-#     increment = relative_shift * metric.sum()
+#     nominator = np.array(sorted(nominator))
+#     average = np.average(metric[nominator>0])
+#     increment = relative_shift * nominator.sum()
 #     users_to_replace = round(increment/average)
-#     metric[0:users_to_replace] = average
-#     return metric
+#     nominator[0:users_to_replace] = average
+#     return nominator
 
 #4th way: injection of median values into zero metric values
-#     metric = np.array(sorted(metric))
-#     median = np.average(metric[metric>0])
-#     increment = relative_shift * metric.sum()
+#     nominator = np.array(sorted(nominator))
+#     median = np.average(metric[nominator>0])
+#     increment = relative_shift * nominator.sum()
 #     users_to_replace = round(increment/median)
-#     metric[0:users_to_replace] = median
-#     return metric
+#     nominator[0:users_to_replace] = median
+#     return nominator
 
 
 ## Function for p-value calculations
