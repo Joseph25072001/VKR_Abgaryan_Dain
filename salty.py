@@ -6,8 +6,7 @@ import scipy
 import numpy as np
 import pandas as pd
 
-metric_names = ['twt_rails', 'twt_rekko_rails', 'bookmarks', 'total_revenue', 'selects_from_rails']
-
+# Function to apply effect into the metric
 
 def apply_effect(nominator, relative_shift, denominator=None):
     """
@@ -26,40 +25,36 @@ def apply_effect(nominator, relative_shift, denominator=None):
     denominator: np.ndarray(2d) or None
         given denominator for the metric
     """
-#     positive_nominator = nominator[nominator > 0]
-#     num_zeros = len(nominator) - len(positive_nominator)
-#     num_zeros_to_replace = int(relative_shift * num_zeros)
-    
-#     mu, sigma = (relative_shift + 1) * 1, 0.2 * (1 + relative_shift)
-#     n = np.random.normal(mu, sigma, size=len(positive_nominator))
-#     e = np.random.exponential(1*(1+relative_shift), size=len(positive_nominator))
-#     g = np.random.gamma(1*(1+relative_shift), 1*(1+relative_shift), size=len(positive_nominator))
-#     u = np.random.uniform(0.5*(1+relative_shift), 1.5*(1+relative_shift), len(positive_nominator))
-#     l = np.random.lognormal(relative_shift,relative_shift, len(positive_nominator))
-#     effect = l * positive_nominator
-    
-#     result = nominator.copy()  # Initialize result as a copy of the nominator
-    
-#     if num_zeros_to_replace > 0:
-#         mean_positive_nominator = positive_nominator.mean()
-#         zero_indices = np.where(nominator == 0)[0]
-#         replace_indices = np.random.choice(zero_indices, size=num_zeros_to_replace, replace=False)
-#         result.iloc[replace_indices] = mean_positive_nominator/100
-        
-#     non_zero_indices = positive_nominator.index
-#     result.loc[non_zero_indices] = effect.loc[non_zero_indices]
-
-#     return result
+#1st way: injection of theoretical distributions of treatment effects into metric values
     mu, sigma = (relative_shift + 1) * 1, 0.2*(1+relative_shift)
-#    n = np.random.normal(mu, sigma, size=len(nominator))
+    n = np.random.normal(mu, sigma, size=len(nominator))
 #     e = np.random.exponential(1*(1+relative_shift), size=len(nominator))
 #     g = np.random.gamma(1*(1+relative_shift), 1*(1+relative_shift), size=len(nominator))
 #     u = np.random.uniform(0.5*(1+relative_shift), 1.5*(1+relative_shift), len(nominator))
-    l = np.random.lognormal(relative_shift,relative_shift,len(nominator))
+#     l = np.random.lognormal(relative_shift,relative_shift,len(nominator))
     
-    return l*np.where(nominator==0,1e-5,nominator)
+    return n*np.where(nominator==0,1e-5,nominator)
+#2nd way: constant increase
+    #return nominator * (relative_shift + 1)
+    
+#3d way: injection of average values into zero metric values
+#     metric = np.array(sorted(metric))
+#     average = np.average(metric[metric>0])
+#     increment = relative_shift * metric.sum()
+#     users_to_replace = round(increment/average)
+#     metric[0:users_to_replace] = average
+#     return metric
+
+#4th way: injection of median values into zero metric values
+#     metric = np.array(sorted(metric))
+#     median = np.average(metric[metric>0])
+#     increment = relative_shift * metric.sum()
+#     users_to_replace = round(increment/median)
+#     metric[0:users_to_replace] = median
+#     return metric
 
 
+## Function for p-value calculations
 def run_salt(salt, data, split_count, nominator, method, effects, denominator, split_by):
     df = data.copy()
     df['split'] = df[split_by].apply(lambda x: int(sha256((str(x) + str(salt)).encode()).hexdigest()[:6], 16) % split_count)
